@@ -19,6 +19,22 @@ uses
   System.SysUtils,
   System.Classes;
 
+type
+  // Verschlüsselungsalgorithmen
+  TEncryptionAlgorithm = (eaAES128, eaAES192, eaAES256, eaRSA1024, eaRSA2048, eaRSA4096);
+
+   // AES-Implementierung
+   // RFC 3826
+   // https://datatracker.ietf.org/doc/html/rfc3826
+  TAES = class
+
+  end;
+
+    // RSA-Implementierung
+  TRSA = class
+
+  end;
+
 {$R *.res}
 
 begin
