@@ -23,11 +23,18 @@ type
    // https://datatracker.ietf.org/doc/html/rfc3826
   TAES = class
   private
+    FKey: array[0..31] of Byte;
+    FKeyLength: Integer;
+    FRounds: Integer;
+
+    procedure KeyExpansion;
+
     function SubBytes(State: Cardinal): Cardinal;
     function InvSubBytes(State: Cardinal): Cardinal;
 
       public
-    constructor Create;
+
+    constructor Create(const Key: array of Byte; KeyLength: Integer);
 
   end;
 
@@ -46,11 +53,27 @@ begin
 
 // AES-Implementierung
 // Why Error ?!?!
-constructor TAES.Create;
-
+constructor TAES.Create(const Key: array of Byte; KeyLength: Integer);
+var
+  I: Integer;
 begin
   inherited Create;
+  FKeyLength := KeyLength;
 
+  for I := 0 to KeyLength - 1 do
+    FKey[I] := Key[I];
+
+  case KeyLength of
+    16: FRounds := 10; // AES-128
+    24: FRounds := 12; // AES-192
+    32: FRounds := 14; // AES-256
+  end;
+
+end;
+
+procedure TAES.KeyExpansion;
+begin
+    //ToDo:
 end;
 
 // https://asecuritysite.com/subjects/chapter88
