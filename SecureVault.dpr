@@ -24,6 +24,7 @@ type
   TAES = class
   private
     FKey: array[0..31] of Byte;
+    FRoundKeys: array[0..59] of Cardinal;
     FKeyLength: Integer;
     FRounds: Integer;
 
@@ -33,10 +34,9 @@ type
     function InvSubBytes(State: Cardinal): Cardinal;
 
       public
+      constructor Create(const Key: array of Byte; KeyLength: Integer);
 
-    constructor Create(const Key: array of Byte; KeyLength: Integer);
-
-  end;
+     end;
 
     // RSA-Implementierung
   TRSA = class
@@ -69,11 +69,40 @@ begin
     32: FRounds := 14; // AES-256
   end;
 
+  KeyExpansion;
+
 end;
 
+//https://en.wikipedia.org/wiki/AES_key_schedule#Rcon
+//https://crypto.stackexchange.com/questions/2418/how-to-use-rcon-in-key-expansion-of-128-bit-advanced-encryption-standard
 procedure TAES.KeyExpansion;
+var
+  I, J: Integer;
+  Temp: Cardinal;
+ const Rcon: array[0..9] of Cardinal = ($01000000, $02000000, $04000000, $08000000,
+                                   $10000000, $20000000, $40000000, $80000000,
+                                   $1B000000, $36000000);
 begin
-    //ToDo:
+  // Erste Runde-Schlüssel aus dem ursprünglichen Schlüssel kopieren
+  for I := 0 to (FKeyLength div 4) - 1 do
+    FRoundKeys[I] := PCardinal(@FKey[I * 4])^;
+
+  // Weitere Runde-Schlüssel generieren
+  for I := FKeyLength div 4 to (FRounds + 1) * 4 - 1 do
+  begin
+    Temp := FRoundKeys[I - 1];
+
+    if (I mod (FKeyLength div 4)) = 0 then
+    begin
+      Temp := SubBytes(((Temp shl 8) or (Temp shr 24))) xor Rcon[(I div (FKeyLength div 4)) - 1];
+    end
+    else if (FKeyLength = 32) and ((I mod 8) = 4) then
+    begin
+      Temp := SubBytes(Temp);
+    end;
+
+    FRoundKeys[I] := FRoundKeys[I - (FKeyLength div 4)] xor Temp;
+  end;
 end;
 
 // https://asecuritysite.com/subjects/chapter88
