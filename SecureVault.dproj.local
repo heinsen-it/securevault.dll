@@ -7,5 +7,7 @@
     <Transaction>1899.12.30 00:00:00.000.961,=C:\Users\User\Documents\Embarcadero\Studio\Projekte\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.503,=C:\Users\User\Documents\Embarcadero\Studio\Projekte\Unit1.pas</Transaction>
     <Transaction>2025.07.12 23:59:08.802,E:\Delphi\DLL_Produkte\securevault.dll\SecureVault.dproj=C:\Users\User\Documents\Embarcadero\Studio\Projekte\Project1.dproj</Transaction>
+    <Transaction>2025.07.15 22:11:13.374,=E:\Delphi\DLL_Produkte\securevault.dll\Unit1.pas</Transaction>
+    <Transaction>2025.07.15 22:11:28.868,E:\Delphi\DLL_Produkte\securevault.dll\u_securevault.pas=E:\Delphi\DLL_Produkte\securevault.dll\Unit1.pas</Transaction>
   </Transactions>
 </BorlandProject>

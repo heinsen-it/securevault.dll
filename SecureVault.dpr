@@ -5,22 +5,41 @@ library SecureVault;
 uses
   System.SysUtils,
   System.Classes,
-    IdHashMessageDigest,
+  IdHashMessageDigest,
   IdGlobal,
   IdCoderMIME,
   IdHMAC,
   IdHMACMD5,
   IdHMACSHA1,
   IdSSLOpenSSL,
-  IdCTypes;
+  IdCTypes,
+  u_securevault in 'u_securevault.pas';
 
 type
   // Verschlüsselungsalgorithmen
   TEncryptionAlgorithm = (eaAES128, eaAES192, eaAES256, eaRSA1024, eaRSA2048, eaRSA4096);
 
 
+    // Verschlüsselungsmodus
+  TEncryptionMode = (emECB, emCBC, emCTR, emGCM);
 
+
+   // Returnwert für diverse Funktionen
     TCardinalArray = array of Cardinal;
+
+
+  // Fehlertypen
+  TSecureVaultError = (
+    sve_Success,
+    sve_InvalidParameter,
+    sve_InvalidKey,
+    sve_InvalidData,
+    sve_FileNotFound,
+    sve_MemoryError,
+    sve_CryptoError,
+    sve_UnknownError
+  );
+
 
    // AES-Implementierung
    // RFC 3826
@@ -55,6 +74,15 @@ type
 
 begin
 
+
+procedure SetError(Context: PSecureVaultContext; Error: TSecureVaultError; const Message: string);
+begin
+  if Context <> nil then
+  begin
+    Context.LastError := Error;
+    System.AnsiStrings.StrPCopy(Context.ErrorMessage, AnsiString(Message));
+  end;
+end;
 
 // AES-Implementierung
 // Why Error ?!?!
