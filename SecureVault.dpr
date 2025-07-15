@@ -18,6 +18,10 @@ type
   // Verschlüsselungsalgorithmen
   TEncryptionAlgorithm = (eaAES128, eaAES192, eaAES256, eaRSA1024, eaRSA2048, eaRSA4096);
 
+
+
+    TCardinalArray = array of Cardinal;
+
    // AES-Implementierung
    // RFC 3826
    // https://datatracker.ietf.org/doc/html/rfc3826
@@ -30,6 +34,7 @@ type
 
     procedure KeyExpansion;
 
+        function ShiftRows(State: array of Cardinal): TCardinalArray;
     function SubBytes(State: Cardinal): Cardinal;
     function InvSubBytes(State: Cardinal): Cardinal;
 
@@ -126,8 +131,14 @@ const
     $E1, $F8, $98, $11, $69, $D9, $8E, $94, $9B, $1E, $87, $E9, $CE, $55, $28, $DF,
     $8C, $A1, $89, $0D, $BF, $E6, $42, $68, $41, $99, $2D, $0F, $B0, $54, $BB, $16
   );
+var
+  I: Integer;
+  Bytes: array[0..3] of Byte;
 begin
-
+  PCardinal(@Bytes)^ := State;
+  for I := 0 to 3 do
+    Bytes[I] := SBox[Bytes[I]];
+  Result := PCardinal(@Bytes)^;
 end;
 
 
@@ -152,8 +163,31 @@ const
     $A0, $E0, $3B, $4D, $AE, $2A, $F5, $B0, $C8, $EB, $BB, $3C, $83, $53, $99, $61,
     $17, $2B, $04, $7E, $BA, $77, $D6, $26, $E1, $69, $14, $63, $55, $21, $0C, $7D
   );
+var
+  I: Integer;
+  Bytes: array[0..3] of Byte;
 begin
+  PCardinal(@Bytes)^ := State;
+  for I := 0 to 3 do
+    Bytes[I] := InvSBox[Bytes[I]];
+  Result := PCardinal(@Bytes)^;
+end;
 
+
+function TAES.ShiftRows(State: array of Cardinal): TCardinalArray;
+var
+  Temp: array[0..15] of Byte;
+  I: Integer;
+begin
+  // State zu Bytes konvertieren
+  for I := 0 to 3 do
+    PCardinal(@Temp[I * 4])^ := State[I];
+
+  // Zeilen verschieben
+  Result[0] := (Cardinal(Temp[0]) shl 24) or (Cardinal(Temp[5]) shl 16) or (Cardinal(Temp[10]) shl 8) or Cardinal(Temp[15]);
+  Result[1] := (Cardinal(Temp[4]) shl 24) or (Cardinal(Temp[9]) shl 16) or (Cardinal(Temp[14]) shl 8) or Cardinal(Temp[3]);
+  Result[2] := (Cardinal(Temp[8]) shl 24) or (Cardinal(Temp[13]) shl 16) or (Cardinal(Temp[2]) shl 8) or Cardinal(Temp[7]);
+  Result[3] := (Cardinal(Temp[12]) shl 24) or (Cardinal(Temp[1]) shl 16) or (Cardinal(Temp[6]) shl 8) or Cardinal(Temp[11]);
 end;
 
 
