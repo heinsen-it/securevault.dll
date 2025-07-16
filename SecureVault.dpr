@@ -5,6 +5,8 @@ library SecureVault;
 uses
   System.SysUtils,
   System.Classes,
+  System.Math,
+  System.AnsiStrings,
   IdHashMessageDigest,
   IdGlobal,
   IdCoderMIME,
@@ -13,7 +15,9 @@ uses
   IdHMACSHA1,
   IdSSLOpenSSL,
   IdCTypes,
+  Winapi.Windows,
   u_securevault in 'u_securevault.pas';
+
 
 type
   // Verschlüsselungsalgorithmen
@@ -26,6 +30,9 @@ type
 
    // Returnwert für diverse Funktionen
     TCardinalArray = array of Cardinal;
+
+      // Padding-Modus
+  TPaddingMode = (pmPKCS7, pmZeros, pmNone);
 
 
   // Fehlertypen
@@ -41,6 +48,21 @@ type
   );
 
 
+    // Verschlüsselungskontext
+  PSecureVaultContext = ^TSecureVaultContext;
+  TSecureVaultContext = record
+    Algorithm: TEncryptionAlgorithm;
+    Mode: TEncryptionMode;
+    Padding: TPaddingMode;
+    Key: array[0..511] of Byte;
+    KeyLength: Integer;
+    IV: array[0..15] of Byte;
+    IVLength: Integer;
+    LastError: TSecureVaultError;
+    ErrorMessage: array[0..255] of AnsiChar;
+  end;
+
+
    // AES-Implementierung
    // RFC 3826
    // https://datatracker.ietf.org/doc/html/rfc3826
@@ -53,9 +75,11 @@ type
 
     procedure KeyExpansion;
 
-        function ShiftRows(State: array of Cardinal): TCardinalArray;
+
     function SubBytes(State: Cardinal): Cardinal;
     function InvSubBytes(State: Cardinal): Cardinal;
+    function ShiftRows(State: array of Cardinal): TCardinalArray;
+    function InvShiftRows(State: array of Cardinal): TCardinalArray;
 
       public
       constructor Create(const Key: array of Byte; KeyLength: Integer);
@@ -70,9 +94,8 @@ type
 
   end;
 
+var
 
-
-begin
 
 
 procedure SetError(Context: PSecureVaultContext; Error: TSecureVaultError; const Message: string);
@@ -217,6 +240,24 @@ begin
   Result[2] := (Cardinal(Temp[8]) shl 24) or (Cardinal(Temp[13]) shl 16) or (Cardinal(Temp[2]) shl 8) or Cardinal(Temp[7]);
   Result[3] := (Cardinal(Temp[12]) shl 24) or (Cardinal(Temp[1]) shl 16) or (Cardinal(Temp[6]) shl 8) or Cardinal(Temp[11]);
 end;
+
+
+function TAES.InvShiftRows(State: array of Cardinal): TCardinalArray;
+var
+  Temp: array[0..15] of Byte;
+  I: Integer;
+begin
+  // State zu Bytes konvertieren
+  for I := 0 to 3 do
+    PCardinal(@Temp[I * 4])^ := State[I];
+
+  // Zeilen umgekehrt verschieben
+  Result[0] := (Cardinal(Temp[0]) shl 24) or (Cardinal(Temp[13]) shl 16) or (Cardinal(Temp[10]) shl 8) or Cardinal(Temp[7]);
+  Result[1] := (Cardinal(Temp[4]) shl 24) or (Cardinal(Temp[1]) shl 16) or (Cardinal(Temp[14]) shl 8) or Cardinal(Temp[11]);
+  Result[2] := (Cardinal(Temp[8]) shl 24) or (Cardinal(Temp[5]) shl 16) or (Cardinal(Temp[2]) shl 8) or Cardinal(Temp[15]);
+  Result[3] := (Cardinal(Temp[12]) shl 24) or (Cardinal(Temp[9]) shl 16) or (Cardinal(Temp[6]) shl 8) or Cardinal(Temp[3]);
+end;
+
 
 
 end.
