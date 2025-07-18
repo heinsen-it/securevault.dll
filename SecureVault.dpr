@@ -80,6 +80,7 @@ type
     function InvSubBytes(State: Cardinal): Cardinal;
     function ShiftRows(State: array of Cardinal): TCardinalArray;
     function InvShiftRows(State: array of Cardinal): TCardinalArray;
+        function MixColumns(State: array of Cardinal): TCardinalArray;
 
       public
       constructor Create(const Key: array of Byte; KeyLength: Integer);
@@ -95,8 +96,26 @@ type
   end;
 
 var
+           function GF2Mult(A, B: Byte): Byte; forward;
 
-
+          // Galois Field Multiplikation für MixColumns
+function GF2Mult(A, B: Byte): Byte;
+var
+  P: Byte;
+begin
+  P := 0;
+  while B <> 0 do
+  begin
+    if (B and 1) <> 0 then
+      P := P xor A;
+    if (A and $80) <> 0 then
+      A := (A shl 1) xor $1B
+    else
+      A := A shl 1;
+    B := B shr 1;
+  end;
+  Result := P;
+end;
 
 procedure SetError(Context: PSecureVaultContext; Error: TSecureVaultError; const Message: string);
 begin
@@ -258,6 +277,22 @@ begin
   Result[3] := (Cardinal(Temp[12]) shl 24) or (Cardinal(Temp[9]) shl 16) or (Cardinal(Temp[6]) shl 8) or Cardinal(Temp[3]);
 end;
 
+
+function TAES.MixColumns(State: array of Cardinal): TCardinalArray;
+var
+  I: Integer;
+  Temp: array[0..3] of Byte;
+begin
+  for I := 0 to 3 do
+  begin
+    PCardinal(@Temp)^ := State[I];
+
+    Result[I] := (Cardinal(GF2Mult(Temp[0], $02) xor GF2Mult(Temp[1], $03) xor Temp[2] xor Temp[3]) shl 24) or
+                 (Cardinal(Temp[0] xor GF2Mult(Temp[1], $02) xor GF2Mult(Temp[2], $03) xor Temp[3]) shl 16) or
+                 (Cardinal(Temp[0] xor Temp[1] xor GF2Mult(Temp[2], $02) xor GF2Mult(Temp[3], $03)) shl 8) or
+                 Cardinal(GF2Mult(Temp[0], $03) xor Temp[1] xor Temp[2] xor GF2Mult(Temp[3], $02));
+  end;
+end;
 
 
 end.
