@@ -96,7 +96,8 @@ type
   end;
 
 var
-           function GF2Mult(A, B: Byte): Byte; forward;
+  GlobalContexts: array[0..99] of PSecureVaultContext;
+function GF2Mult(A, B: Byte): Byte; forward;
 
           // Galois Field Multiplikation für MixColumns
 function GF2Mult(A, B: Byte): Byte;
@@ -115,6 +116,22 @@ begin
     B := B shr 1;
   end;
   Result := P;
+end;
+
+// Hilfsfunktionen
+function GetNextContextHandle: Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := 0 to High(GlobalContexts) do
+  begin
+    if GlobalContexts[I] = nil then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
 end;
 
 procedure SetError(Context: PSecureVaultContext; Error: TSecureVaultError; const Message: string);
