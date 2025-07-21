@@ -134,6 +134,14 @@ begin
   end;
 end;
 
+function GetContext(Handle: Integer): PSecureVaultContext;
+begin
+  Result := nil;
+  if (Handle >= 0) and (Handle <= High(GlobalContexts)) then
+    Result := GlobalContexts[Handle];
+end;
+
+
 procedure SetError(Context: PSecureVaultContext; Error: TSecureVaultError; const Message: string);
 begin
   if Context <> nil then
