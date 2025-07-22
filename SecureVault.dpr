@@ -80,7 +80,8 @@ type
     function InvSubBytes(State: Cardinal): Cardinal;
     function ShiftRows(State: array of Cardinal): TCardinalArray;
     function InvShiftRows(State: array of Cardinal): TCardinalArray;
-        function MixColumns(State: array of Cardinal): TCardinalArray;
+    function MixColumns(State: array of Cardinal): TCardinalArray;
+    function InvMixColumns(State: array of Cardinal): TCardinalArray;
 
       public
       constructor Create(const Key: array of Byte; KeyLength: Integer);
@@ -316,6 +317,22 @@ begin
                  (Cardinal(Temp[0] xor GF2Mult(Temp[1], $02) xor GF2Mult(Temp[2], $03) xor Temp[3]) shl 16) or
                  (Cardinal(Temp[0] xor Temp[1] xor GF2Mult(Temp[2], $02) xor GF2Mult(Temp[3], $03)) shl 8) or
                  Cardinal(GF2Mult(Temp[0], $03) xor Temp[1] xor Temp[2] xor GF2Mult(Temp[3], $02));
+  end;
+end;
+
+function TAES.InvMixColumns(State: array of Cardinal): TCardinalArray;
+var
+  I: Integer;
+  Temp: array[0..3] of Byte;
+begin
+  for I := 0 to 3 do
+  begin
+    PCardinal(@Temp)^ := State[I];
+
+    Result[I] := (Cardinal(GF2Mult(Temp[0], $0E) xor GF2Mult(Temp[1], $0B) xor GF2Mult(Temp[2], $0D) xor GF2Mult(Temp[3], $09)) shl 24) or
+                 (Cardinal(GF2Mult(Temp[0], $09) xor GF2Mult(Temp[1], $0E) xor GF2Mult(Temp[2], $0B) xor GF2Mult(Temp[3], $0D)) shl 16) or
+                 (Cardinal(GF2Mult(Temp[0], $0D) xor GF2Mult(Temp[1], $09) xor GF2Mult(Temp[2], $0E) xor GF2Mult(Temp[3], $0B)) shl 8) or
+                 Cardinal(GF2Mult(Temp[0], $0B) xor GF2Mult(Temp[1], $0D) xor GF2Mult(Temp[2], $09) xor GF2Mult(Temp[3], $0E));
   end;
 end;
 
